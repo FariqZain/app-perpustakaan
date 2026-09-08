@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreMemberRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'nama' => 'required|string|max:100',
+            'nim' => 'required|string|max:30',
+            'email' => 'required|email|max:100',
+            'nomor_telepon' => 'required|string|max:20',
+            'alamat' => 'required|string|max:500',
+            'status' => 'required|in:aktif,nonaktif',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'nama.required' => 'Nama anggota wajib diisi.',
+            'nama.max' => 'Nama anggota maksimal 100 karakter.',
+            'nim.required' => 'NIM wajib diisi.',
+            'nim.max' => 'NIM maksimal 30 karakter.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Email harus berupa alamat email yang valid.',
+            'email.max' => 'Email maksimal 100 karakter.',
+            'nomor_telepon.required' => 'Nomor telepon wajib diisi.',
+            'nomor_telepon.max' => 'Nomor telepon maksimal 20 karakter.',
+            'alamat.required' => 'Alamat wajib diisi.',
+            'alamat.max' => 'Alamat maksimal 500 karakter.',
+            'status.required' => 'Status wajib dipilih.',
+            'status.in' => 'Status harus aktif atau nonaktif.',
+        ];
+    }
+}
