@@ -44,6 +44,6 @@
         </tbody>
     </table>
 
-    <p><em>Catatan: data di atas masih data dummy (array statis di Controller), belum dari database.</em></p>
+    <p><em>{{ $categories->links() }}</em></p>
 </body>
 </html>
