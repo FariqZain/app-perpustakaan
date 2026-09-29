@@ -13,4 +13,5 @@ Route::get('/', function () {
 Route::resource('books', BookController::class);
 Route::resource('categories', CategoryController::class)->except(['show']);
 Route::resource('members', MemberController::class);
+Route::patch('/loans/{id}/kembalikan', [LoanController::class, 'kembalikan'])->name('loans.kembalikan');
 Route::resource('loans', LoanController::class);
