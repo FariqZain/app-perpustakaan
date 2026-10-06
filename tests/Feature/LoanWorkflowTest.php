@@ -14,13 +14,13 @@ class LoanWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_loan_create_page_lists_members_users_and_books(): void
+    public function test_loan_create_page_lists_members_and_books_for_logged_in_user(): void
     {
         $member = $this->createMember();
         $user = User::factory()->create();
         $book = $this->createBook();
 
-        $response = $this->get(route('loans.create'));
+        $response = $this->actingAs($user)->get(route('loans.create'));
 
         $response->assertViewIs('loans.create')
             ->assertSee($member->nama)
@@ -36,9 +36,8 @@ class LoanWorkflowTest extends TestCase
         $firstBook = $this->createBook();
         $secondBook = $this->createBook();
 
-        $response = $this->post(route('loans.store'), [
+        $response = $this->actingAs($user)->post(route('loans.store'), [
             'member_id' => $member->id,
-            'user_id' => $user->id,
             'tanggal_pinjam' => '2026-09-29',
             'tanggal_kembali' => '2026-10-06',
             'book_ids' => [$firstBook->id, $secondBook->id],
@@ -72,7 +71,7 @@ class LoanWorkflowTest extends TestCase
         $loan = $this->createLoan($member, $user, 'dipinjam');
         $returnDate = now()->toDateString();
 
-        $response = $this->patch(route('loans.kembalikan', $loan));
+        $response = $this->actingAs($user)->patch(route('loans.kembalikan', $loan));
 
         $response->assertRedirectToRoute('loans.index')
             ->assertSessionHas('success', 'Buku berhasil dikembalikan.');
@@ -90,7 +89,7 @@ class LoanWorkflowTest extends TestCase
         $borrowedLoan = $this->createLoan($member, $user, 'dipinjam');
         $returnedLoan = $this->createLoan($member, $user, 'dikembalikan');
 
-        $response = $this->get(route('loans.index'));
+        $response = $this->actingAs($user)->get(route('loans.index'));
 
         $response->assertSee('<span class="badge badge-warning">Dipinjam</span>', false)
             ->assertSee('<span class="badge badge-success">Dikembalikan</span>', false)
@@ -104,7 +103,7 @@ class LoanWorkflowTest extends TestCase
         $user = User::factory()->create();
         $loan = $this->createLoan($member, $user, 'terlambat');
 
-        $response = $this->get(route('loans.show', $loan));
+        $response = $this->actingAs($user)->get(route('loans.show', $loan));
 
         $response->assertViewIs('loans.show')
             ->assertSee('<span class="badge badge-danger">Terlambat</span>', false);
