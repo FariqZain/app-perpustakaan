@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreBookRequest;
+use App\Http\Resources\BookResource;
+use App\Models\Book;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
+
+class BookController extends Controller
+{
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $query = Book::with('category');
+
+        if ($request->filled('judul')) {
+            $query->where('judul', 'like', '%'.$request->query('judul').'%');
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->query('category_id'));
+        }
+
+        return BookResource::collection($query->paginate(10)->withQueryString());
+    }
+
+    public function store(StoreBookRequest $request): JsonResponse
+    {
+        $book = Book::create($request->validated())->load('category');
+
+        return (new BookResource($book))->response()->setStatusCode(201);
+    }
+
+    public function show(string $id): BookResource
+    {
+        return new BookResource(Book::with('category')->findOrFail($id));
+    }
+
+    public function update(Request $request, string $id): BookResource
+    {
+        $book = Book::findOrFail($id);
+        $validated = $request->validate([
+            'judul' => 'required|string|max:200',
+            'penulis' => 'required|string|max:100',
+            'penerbit' => 'required|string|max:100',
+            'tahun_terbit' => 'required|integer|min:1900|max:'.date('Y'),
+            'isbn' => ['nullable', 'string', 'max:20', Rule::unique('books', 'isbn')->ignore($book->id)],
+            'stok' => 'required|integer|min:0',
+            'category_id' => 'required|integer|exists:categories,id',
+        ]);
+
+        $book->update($validated);
+
+        return new BookResource($book->load('category'));
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+        Book::findOrFail($id)->delete();
+
+        return response()->json(['message' => 'Buku berhasil dihapus.']);
+    }
+}

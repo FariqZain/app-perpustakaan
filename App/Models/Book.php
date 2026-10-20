@@ -17,6 +17,7 @@ class Book extends Model
         'penulis',
         'penerbit',
         'tahun_terbit',
+        'isbn',
         'stok',
     ];
 

@@ -1,58 +1,54 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# API Perpustakaan
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+REST API ini menyediakan data buku, anggota, peminjaman, dan statistik dalam JSON. Endpoint API saat ini bersifat publik dan belum memakai autentikasi token.
 
-## About Laravel
+## Menjalankan dan Menguji
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Jalankan aplikasi Laravel, lalu gunakan base URL `http://127.0.0.1:8000/api` (sesuaikan port jika berbeda). Sertakan header berikut pada request:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```http
+Accept: application/json
+Content-Type: application/json
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Verifikasi route dan jalankan tes endpoint:
 
-## Contributing
+```bash
+php artisan route:list --path=api
+php artisan test --compact tests/Feature/ApiEndpointsTest.php
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Endpoint
 
-## Code of Conduct
+Respons berikut adalah cuplikan struktur resource; isi record, timestamp, dan metadata pagination mengikuti database saat request dijalankan. Cuplikan ini bukan salinan response dari Postman.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+| Method | URL | Body | Response sukses | Status sukses / gagal |
+|---|---|---|---|---|
+| GET | `/api/books` | - | `200`: `{ "data": [ { "id": ..., "judul": ..., "isbn": ..., "category": { "id": ..., "nama_kategori": ... } } ], "links": {...}, "meta": {...} }` | `200` |
+| GET | `/api/books/{id}` | - | `200`: `{ "data": { "id": ..., "judul": ..., "category": { "id": ..., "nama_kategori": ... } } }` | `200`; `404` jika buku tidak ditemukan |
+| POST | `/api/books` | `{"judul":"...","penulis":"...","penerbit":"...","tahun_terbit":2020,"isbn":"...","stok":1,"category_id":1}` | `201`: `{ "data": { "id": ..., "judul": ..., "isbn": ..., "category": {...} } }` | `201`; `422` jika validasi gagal |
+| PUT | `/api/books/{id}` | Field buku yang sama seperti `POST /api/books` | `200`: `{ "data": { "id": ..., "judul": ..., "category": {...} } }` | `200`; `404` jika buku tidak ditemukan; `422` jika validasi gagal |
+| DELETE | `/api/books/{id}` | - | `200`: `{"message":"Buku berhasil dihapus."}` | `200`; `404` jika buku tidak ditemukan |
+| GET | `/api/members` | - | `200`: `{ "data": [ { "id": ..., "nama": ..., "nim": ..., "email": ..., "status": ... } ], "links": {...}, "meta": {...} }` | `200` |
+| GET | `/api/members/{id}` | - | `200`: `{ "data": { "id": ..., "nama": ..., "nim": ..., "email": ..., "status": ... } }` | `200`; `404` jika anggota tidak ditemukan |
+| GET | `/api/loans` | - | `200`: `{ "data": [ { "id": ..., "status": ..., "member": {...}, "petugas": {...}, "books": [...] } ], "links": {...}, "meta": {...} }` | `200` |
+| POST | `/api/loans` | `{"member_id":1,"user_id":1,"tanggal_pinjam":"2026-10-20","tanggal_kembali":"2026-10-27","book_ids":[1]}` | `201`: `{ "data": { "id": ..., "status": "dipinjam", "member": {...}, "petugas": {...}, "books": [...] } }` | `201`; `422` jika validasi gagal |
+| PUT | `/api/loans/{id}/kembalikan` | - | `200`: `{ "data": { "id": ..., "status": "dikembalikan", "tanggal_dikembalikan": "YYYY-MM-DD", ... } }` | `200`; `404` jika peminjaman tidak ditemukan |
+| GET | `/api/stats` | - | `200`: `{"total_buku":0,"total_anggota":0,"peminjaman_aktif":0}` | `200` |
 
-## Security Vulnerabilities
+`GET /api/books` mendukung filter opsional `?judul=` (pencarian sebagian) dan `?category_id=` (pencocokan kategori). Endpoint list buku, anggota, dan peminjaman menggunakan pagination 10 record per halaman dengan `data`, `links`, dan `meta`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Resource buku memuat `id`, `judul`, `penulis`, `penerbit`, `tahun_terbit`, `isbn`, `stok`, `sampul`, timestamp, serta kategori saat relasinya dimuat. Resource anggota memuat field anggota dan timestamp. Resource peminjaman memuat tanggal/status, anggota, `petugas` (id dan nama), serta buku-buku dalam transaksi.
 
-## License
+Jika validasi gagal, Laravel mengembalikan HTTP `422` dengan format JSON berikut:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```json
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "judul": ["The judul field is required."]
+  }
+}
+```
+
+Pesan validasi dapat berbeda sesuai field yang gagal dan bahasa konfigurasi aplikasi.
