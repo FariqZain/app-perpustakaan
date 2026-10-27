@@ -32,8 +32,8 @@ class AuthAndProfileTest extends TestCase
             'password' => 'password',
         ]);
 
-        $loginResponse->assertRedirect(route('books.index'))
-            ->assertSessionHas('success', 'Login berhasil. Selamat datang!');
+        $loginResponse->assertRedirect(route('dashboard'))
+            ->assertSessionHas('success', 'Login berhasil, selamat datang Admin Perpustakaan.');
 
         $this->assertAuthenticatedAs($admin);
 

@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Loan;
 use App\Models\Member;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\View\View;
 
 class LoanController extends Controller
 {
@@ -14,6 +17,29 @@ class LoanController extends Controller
         $loans = Loan::with(['member', 'user', 'loanItems.book'])->paginate(10);
 
         return view('loans.index', compact('loans'));
+    }
+
+    public function report(Request $request): View
+    {
+        $body = ['data' => [], 'meta' => null];
+
+        try {
+            $baseUrl = rtrim((string) config('services.internal_api.base_url'), '/');
+            $response = Http::timeout(5)->get($baseUrl.'/api/loans', [
+                'page' => $request->query('page', 1),
+            ]);
+
+            if ($response->successful()) {
+                $body = $response->json();
+            }
+        } catch (ConnectionException) {
+            // Keep the report available when the internal API server is offline.
+        }
+
+        return view('loans.report', [
+            'loans' => $body['data'] ?? [],
+            'meta' => $body['meta'] ?? null,
+        ]);
     }
 
     public function create()

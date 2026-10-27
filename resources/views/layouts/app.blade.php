@@ -23,6 +23,15 @@
         .btn { display: inline-block; padding: 6px 12px; background: #2563eb; color: #fff; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; }
         .alert-success { background: #dcfce7; color: #15803d; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; }
         .alert-error { background: #fee2e2; color: #b91c1c; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; }
+        .stats-grid { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
+        .stat-card { flex: 1; min-width: 160px; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; text-align: center; }
+        .stat-card .value { font-size: 32px; font-weight: bold; color: #1e3a8a; }
+        .stat-card .label { margin-top: 6px; color: #6b7280; font-size: 14px; }
+        .pagination { margin-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .pagination a { color: #2563eb; text-decoration: none; }
+        .pagination a:hover { text-decoration: underline; }
+        .pagination .pagination-current { font-weight: bold; color: #1e3a8a; }
+        .pagination .pagination-disabled { color: #9ca3af; }
         .badge { display: inline-block; padding: 3px 8px; font-size: 12px; font-weight: 600; border-radius: 9999px; text-transform: capitalize; }
         .badge-success { background-color: #dcfce7; color: #15803d; }
         .badge-warning { background-color: #fef3c7; color: #b45309; }

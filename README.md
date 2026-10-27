@@ -2,6 +2,52 @@
 
 REST API ini menyediakan data buku, anggota, peminjaman, dan statistik dalam JSON. Endpoint API saat ini bersifat publik dan belum memakai autentikasi token.
 
+## Instalasi Lokal
+
+Clone repository, pasang dependency, dan siapkan environment:
+
+```bash
+git clone https://github.com/FariqZain/app-perpustakaan.git
+cd app-perpustakaan
+composer install
+```
+
+Salin `.env.example` menjadi `.env`, lalu pastikan konfigurasi berikut tersedia:
+
+```dotenv
+APP_URL=http://127.0.0.1:8000
+INTERNAL_API_URL=http://127.0.0.1:8011
+APP_FAKER_LOCALE=id_ID
+DB_CONNECTION=sqlite
+```
+
+Buat file database SQLite jika belum ada, kemudian buat application key dan jalankan migration beserta data demo:
+
+```bash
+# PowerShell
+New-Item -ItemType File -Path database/database.sqlite -Force
+
+# Bash
+touch database/database.sqlite
+
+php artisan key:generate
+php artisan migrate:fresh --seed
+```
+
+Jalankan dua server di terminal terpisah. Server pertama untuk browser dan server kedua untuk request API internal dari Dashboard dan Laporan:
+
+```bash
+php artisan serve --port=8000
+```
+
+```bash
+php artisan serve --port=8011
+```
+
+Buka `http://127.0.0.1:8000/login`. Akun demo admin adalah `admin@pens.ac.id` dengan password `password`. Tanpa server kedua, Dashboard menampilkan statistik nol dan Laporan menampilkan tabel kosong; aplikasi tetap dapat dibuka.
+
+Panduan urutan presentasi tersedia di [DEMO.md](DEMO.md).
+
 ## Menjalankan dan Menguji
 
 Jalankan aplikasi Laravel, lalu gunakan base URL `http://127.0.0.1:8000/api` (sesuaikan port jika berbeda). Sertakan header berikut pada request:

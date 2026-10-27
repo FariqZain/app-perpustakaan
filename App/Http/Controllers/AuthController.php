@@ -29,7 +29,8 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('books.index')->with('success', 'Login berhasil. Selamat datang!');
+        return redirect()->intended(route('dashboard'))
+            ->with('success', 'Login berhasil, selamat datang '.Auth::user()->name.'.');
     }
 
     public function logout(Request $request): RedirectResponse
