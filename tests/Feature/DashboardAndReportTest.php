@@ -4,95 +4,72 @@ namespace Tests\Feature;
 
 use App\Models\Book;
 use App\Models\Category;
+use App\Models\Loan;
+use App\Models\Member;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Request as ClientRequest;
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class DashboardAndReportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_dashboard_displays_stats_from_the_internal_api(): void
+    public function test_dashboard_displays_current_database_stats(): void
     {
-        $stats = [
-            'total_buku' => 20,
-            'total_anggota' => 15,
-            'peminjaman_aktif' => 3,
-        ];
-        Http::fake(['*' => Http::response($stats)]);
+        Category::create(['nama_kategori' => 'Novel']);
+        Book::factory()->count(2)->create();
+        $member = Member::factory()->create();
+        $user = User::factory()->create();
+        $this->createLoan($user, $member, 'dipinjam');
+        $this->createLoan($user, $member, 'terlambat');
+        $this->createLoan($user, $member, 'dikembalikan');
 
         $response = $this->actingAs(User::factory()->create())->get(route('dashboard'));
 
         $response->assertOk()
             ->assertViewIs('dashboard')
-            ->assertViewHas('stats', $stats)
+            ->assertViewHas('stats', [
+                'total_buku' => 2,
+                'total_anggota' => 1,
+                'peminjaman_aktif' => 2,
+            ])
             ->assertSee('Total Buku')
-            ->assertSee('20');
-
-        Http::assertSent(fn (ClientRequest $request): bool => str_ends_with($request->url(), '/api/stats'));
+            ->assertSee('2');
     }
 
-    public function test_report_displays_api_data_and_forwards_the_page_query(): void
+    public function test_report_displays_returned_loans_from_the_database(): void
     {
-        Http::fake(['*' => Http::response([
-            'data' => [[
-                'id' => 14,
-                'member' => ['nama' => 'Ayu Lestari'],
-                'petugas' => ['name' => 'Bambang Sutrisno'],
-                'books' => [['judul' => 'Laskar Pelangi']],
-                'tanggal_pinjam' => '2026-10-20',
-                'tanggal_kembali' => '2026-10-27',
-                'status' => 'dipinjam',
-            ]],
-            'meta' => ['current_page' => 2, 'last_page' => 3],
-        ])]);
+        Category::create(['nama_kategori' => 'Novel']);
+        $book = Book::factory()->create(['judul' => 'Bumi Manusia']);
+        $member = Member::factory()->create(['nama' => 'Ayu Lestari']);
+        $user = User::factory()->create(['name' => 'Bambang Sutrisno']);
+        $loan = $this->createLoan($user, $member, 'dikembalikan');
+        $loan->loanItems()->create(['book_id' => $book->id]);
 
         $response = $this->actingAs(User::factory()->create())
-            ->get(route('loans.report', ['page' => 2]));
+            ->get(route('loans.report'));
 
         $response->assertOk()
             ->assertViewIs('loans.report')
             ->assertSee('Ayu Lestari')
             ->assertSee('Bambang Sutrisno')
-            ->assertSee('Laskar Pelangi')
-            ->assertSee('Halaman 2 dari 3');
-
-        Http::assertSent(fn (ClientRequest $request): bool => str_contains($request->url(), '/api/loans?page=2'));
+            ->assertSee('Bumi Manusia')
+            ->assertSee('Dikembalikan');
     }
 
-    public function test_dashboard_and_report_use_fallbacks_when_the_internal_api_is_unavailable(): void
+    public function test_report_paginates_database_loans(): void
     {
-        Http::fake(fn () => throw new ConnectionException('Internal API offline.'));
         $user = User::factory()->create();
+        $member = Member::factory()->create();
 
-        $this->actingAs($user)
-            ->get(route('dashboard'))
+        for ($index = 0; $index < 11; $index++) {
+            $this->createLoan($user, $member, 'dikembalikan');
+        }
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('loans.report', ['page' => 2]))
             ->assertOk()
-            ->assertSee('Total Buku')
-            ->assertSee('0');
-
-        $this->get(route('loans.report'))
-            ->assertOk()
-            ->assertSee('Belum ada data peminjaman.');
-    }
-
-    public function test_dashboard_and_report_use_fallbacks_for_unsuccessful_api_responses(): void
-    {
-        Http::fake(['*' => Http::response([], 503)]);
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->get(route('dashboard'))
-            ->assertOk()
-            ->assertSee('Total Buku')
-            ->assertSee('0');
-
-        $this->get(route('loans.report'))
-            ->assertOk()
-            ->assertSee('Belum ada data peminjaman.');
+            ->assertSee('Halaman 2 dari 2');
     }
 
     public function test_book_pagination_uses_the_custom_text_view(): void
@@ -117,5 +94,16 @@ class DashboardAndReportTest extends TestCase
         $this->assertDatabaseCount('books', 20);
         $this->assertDatabaseCount('members', 15);
         $this->assertDatabaseCount('loans', 10);
+    }
+
+    private function createLoan(User $user, Member $member, string $status): Loan
+    {
+        return Loan::create([
+            'member_id' => $member->id,
+            'user_id' => $user->id,
+            'tanggal_pinjam' => '2026-10-20',
+            'tanggal_kembali' => '2026-10-27',
+            'status' => $status,
+        ]);
     }
 }

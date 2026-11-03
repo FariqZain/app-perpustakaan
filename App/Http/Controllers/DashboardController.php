@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Http;
+use App\Models\Book;
+use App\Models\Loan;
+use App\Models\Member;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -11,21 +12,10 @@ class DashboardController extends Controller
     public function index(): View
     {
         $stats = [
-            'total_buku' => 0,
-            'total_anggota' => 0,
-            'peminjaman_aktif' => 0,
+            'total_buku' => Book::count(),
+            'total_anggota' => Member::count(),
+            'peminjaman_aktif' => Loan::whereIn('status', ['dipinjam', 'terlambat'])->count(),
         ];
-
-        try {
-            $baseUrl = rtrim((string) config('services.internal_api.base_url'), '/');
-            $response = Http::timeout(5)->get($baseUrl.'/api/stats');
-
-            if ($response->successful()) {
-                $stats = $response->json();
-            }
-        } catch (ConnectionException) {
-            // Keep the dashboard available when the internal API server is offline.
-        }
 
         return view('dashboard', compact('stats'));
     }

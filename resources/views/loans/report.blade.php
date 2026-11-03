@@ -20,17 +20,17 @@
         <tbody>
             @forelse ($loans as $loan)
                 <tr>
-                    <td>{{ $loan['id'] }}</td>
-                    <td>{{ $loan['member']['nama'] ?? '' }}</td>
-                    <td>{{ $loan['petugas']['name'] ?? '' }}</td>
+                    <td>{{ $loan->id }}</td>
+                    <td>{{ $loan->member?->nama ?? '' }}</td>
+                    <td>{{ $loan->user?->name ?? '' }}</td>
                     <td>
-                        @foreach ($loan['books'] ?? [] as $book)
-                            {{ $book['judul'] }}@if (!$loop->last), @endif
+                        @foreach ($loan->loanItems as $loanItem)
+                            {{ $loanItem->book?->judul }}@if (!$loop->last), @endif
                         @endforeach
                     </td>
-                    <td>{{ $loan['tanggal_pinjam'] }}</td>
-                    <td>{{ $loan['tanggal_kembali'] }}</td>
-                    <td>{{ ucfirst($loan['status']) }}</td>
+                    <td>{{ $loan->tanggal_pinjam }}</td>
+                    <td>{{ $loan->tanggal_kembali }}</td>
+                    <td>{{ ucfirst($loan->status) }}</td>
                 </tr>
             @empty
                 <tr>
