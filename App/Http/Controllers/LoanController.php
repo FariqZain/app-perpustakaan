@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\Loan;
 use App\Models\Member;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class LoanController extends Controller
@@ -48,17 +49,19 @@ class LoanController extends Controller
             'book_ids.*' => 'integer|exists:books,id',
         ]);
 
-        $loan = Loan::create([
-            'member_id' => $validated['member_id'],
-            'user_id' => auth()->id(),
-            'tanggal_pinjam' => $validated['tanggal_pinjam'],
-            'tanggal_kembali' => $validated['tanggal_kembali'],
-            'status' => 'dipinjam',
-        ]);
+        DB::transaction(function () use ($validated): void {
+            $loan = Loan::create([
+                'member_id' => $validated['member_id'],
+                'user_id' => auth()->id(),
+                'tanggal_pinjam' => $validated['tanggal_pinjam'],
+                'tanggal_kembali' => $validated['tanggal_kembali'],
+                'status' => 'dipinjam',
+            ]);
 
-        foreach ($validated['book_ids'] as $bookId) {
-            $loan->loanItems()->create(['book_id' => $bookId]);
-        }
+            foreach ($validated['book_ids'] as $bookId) {
+                $loan->loanItems()->create(['book_id' => $bookId]);
+            }
+        });
 
         return redirect()->route('loans.index')
             ->with('success', 'Transaksi peminjaman berhasil dibuat.');

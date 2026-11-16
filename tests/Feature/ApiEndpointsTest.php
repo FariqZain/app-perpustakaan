@@ -78,6 +78,8 @@ class ApiEndpointsTest extends TestCase
 
     public function test_loan_endpoints_create_list_and_return_a_loan(): void
     {
+        $this->travelTo('2026-10-20');
+
         $category = Category::create(['nama_kategori' => 'Novel']);
         $book = $this->createBook($category, 'Laskar Pelangi');
         $member = Member::create([
@@ -100,6 +102,7 @@ class ApiEndpointsTest extends TestCase
 
         $response->assertCreated()
             ->assertJsonPath('data.status', 'dipinjam')
+            ->assertJsonPath('data.denda', 0)
             ->assertJsonPath('data.member.id', $member->id)
             ->assertJsonPath('data.petugas.name', $user->name)
             ->assertJsonPath('data.books.0.id', $book->id);

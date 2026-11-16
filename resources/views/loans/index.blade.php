@@ -21,6 +21,7 @@
                 <th>Tgl Pinjam</th>
                 <th>Tgl Kembali</th>
                 <th>Status</th>
+                <th>Denda</th>
                 <th>Aksi</th>
             </tr>
         </thead>
@@ -48,13 +49,14 @@
                     <td>
                         <span class="badge {{ $badgeClass }}">{{ ucfirst($loan['status']) }}</span>
                     </td>
+                    <td>Rp{{ number_format($loan->denda, 0, ',', '.') }}</td>
                     <td>
                         <a href="{{ route('loans.show', $loan['id']) }}">Detail</a>
                         |
                         <a href="{{ route('loans.edit', $loan['id']) }}">Edit</a>
 
                         {{-- Tombol Kembalikan Buku hanya tampil saat status dipinjam --}}
-                        @if ($loan['status'] === 'dipinjam')
+                        @if (in_array($loan['status'], ['dipinjam', 'terlambat'], true))
                             |
                             <form class="inline" action="{{ route('loans.kembalikan', $loan['id']) }}" method="POST">
                                 @csrf
@@ -73,7 +75,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8">Belum ada data peminjaman.</td>
+                    <td colspan="9">Belum ada data peminjaman.</td>
                 </tr>
             @endforelse
         </tbody>

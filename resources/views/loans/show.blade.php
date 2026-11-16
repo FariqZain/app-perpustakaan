@@ -42,6 +42,10 @@
                 <span class="badge {{ $badgeClass }}">{{ ucfirst($loan['status']) }}</span>
             </td>
         </tr>
+        <tr>
+            <th>Denda</th>
+            <td>Rp{{ number_format($loan->denda, 0, ',', '.') }}</td>
+        </tr>
     </table>
 
     <h2>Buku yang Dipinjam</h2>

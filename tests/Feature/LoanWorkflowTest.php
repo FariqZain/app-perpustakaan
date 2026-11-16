@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Loan;
+use App\Models\LoanItem;
 use App\Models\Member;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -64,8 +65,37 @@ class LoanWorkflowTest extends TestCase
         ]);
     }
 
+    public function test_a_loan_is_rolled_back_when_a_loan_item_cannot_be_saved(): void
+    {
+        $member = $this->createMember();
+        $user = User::factory()->create();
+        $firstBook = $this->createBook();
+        $secondBook = $this->createBook();
+
+        LoanItem::creating(function (LoanItem $loanItem) use ($secondBook): void {
+            if ($loanItem->book_id === $secondBook->id) {
+                throw new RuntimeException('Unable to save loan item.');
+            }
+        });
+
+        $response = $this->actingAs($user)->post(route('loans.store'), [
+            'member_id' => $member->id,
+            'tanggal_pinjam' => '2026-09-29',
+            'tanggal_kembali' => '2026-10-06',
+            'book_ids' => [$firstBook->id, $secondBook->id],
+        ]);
+
+        $response->assertInternalServerError();
+
+        $this->assertDatabaseMissing('loans', ['member_id' => $member->id]);
+        $this->assertDatabaseMissing('loan_items', ['book_id' => $firstBook->id]);
+        $this->assertDatabaseMissing('loan_items', ['book_id' => $secondBook->id]);
+    }
+
     public function test_returning_a_loan_sets_status_and_return_date(): void
     {
+        $this->travelTo('2026-10-01');
+
         $member = $this->createMember();
         $user = User::factory()->create();
         $loan = $this->createLoan($member, $user, 'dipinjam');
@@ -80,10 +110,36 @@ class LoanWorkflowTest extends TestCase
             'status' => 'dikembalikan',
             'tanggal_dikembalikan' => $returnDate,
         ]);
+        $this->assertSame(4000, $loan->fresh()->denda);
+    }
+
+    public function test_overdue_loan_is_marked_late_and_shows_its_daily_fine(): void
+    {
+        $this->travelTo('2026-10-01');
+
+        $member = $this->createMember();
+        $user = User::factory()->create();
+        $loan = $this->createLoan($member, $user, 'dipinjam');
+
+        $this->assertSame('terlambat', $loan->status);
+        $this->assertSame(4000, $loan->denda);
+
+        $response = $this->actingAs($user)->get(route('loans.show', $loan));
+
+        $response->assertViewIs('loans.show')
+            ->assertSee('Terlambat')
+            ->assertSee('Rp4.000');
+
+        $indexResponse = $this->actingAs($user)->get(route('loans.index'));
+
+        $indexResponse->assertSee('<span class="badge badge-danger">Terlambat</span>', false)
+            ->assertSee('action="'.route('loans.kembalikan', $loan).'"', false);
     }
 
     public function test_loan_index_shows_status_badges_and_only_offers_return_for_borrowed_loans(): void
     {
+        $this->travelTo('2026-09-22');
+
         $member = $this->createMember();
         $user = User::factory()->create();
         $borrowedLoan = $this->createLoan($member, $user, 'dipinjam');

@@ -22,6 +22,7 @@ class LoanResource extends JsonResource
             'tanggal_kembali' => $this->tanggal_kembali,
             'tanggal_dikembalikan' => $this->tanggal_dikembalikan,
             'status' => $this->status,
+            'denda' => $this->denda,
             'member' => $this->whenLoaded('member', fn (): array => (new MemberResource($this->member))->resolve($request)),
             'petugas' => $this->whenLoaded('user', fn (): array => [
                 'id' => $this->user->id,

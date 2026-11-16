@@ -10,8 +10,9 @@
         .login-box h1 { font-size: 20px; margin-top: 0; text-align: center; }
         label { display: block; margin-top: 12px; font-weight: bold; }
         input { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
-        .checkbox-row { display: flex; align-items: center; gap: 6px; margin-top: 12px; }
-        .checkbox-row label { display: inline; margin-top: 0; font-weight: normal; }
+        .checkbox-row { display: flex; align-items: center; justify-content: flex-start; gap: 6px; margin-top: 12px; }
+        .checkbox-row input { width: 16px; height: 16px; flex: 0 0 16px; margin: 0; padding: 0; }
+        .checkbox-row label { display: inline; margin-top: 0; font-weight: normal; white-space: nowrap; }
         .btn { margin-top: 20px; width: 100%; padding: 10px; background: #2563eb; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 15px; }
         .error { color: #b91c1c; font-size: 14px; margin-top: 4px; }
         .alert-success { background: #d1fae5; color: #065f46; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; }

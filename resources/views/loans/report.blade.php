@@ -15,6 +15,7 @@
                 <th>Tgl Pinjam</th>
                 <th>Tgl Kembali</th>
                 <th>Status</th>
+                <th>Denda</th>
             </tr>
         </thead>
         <tbody>
@@ -31,10 +32,11 @@
                     <td>{{ $loan->tanggal_pinjam }}</td>
                     <td>{{ $loan->tanggal_kembali }}</td>
                     <td>{{ ucfirst($loan->status) }}</td>
+                    <td>Rp{{ number_format($loan->denda, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">Belum ada data peminjaman.</td>
+                    <td colspan="8">Belum ada data peminjaman.</td>
                 </tr>
             @endforelse
         </tbody>
